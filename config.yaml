@@ -1,0 +1,62 @@
+server:
+  port: 8080
+  data_dir: /app/data
+
+ingestion:
+  workers: 4
+  chunk_chars: 1200
+  chunk_overlap_chars: 180
+
+qdrant:
+  url: http://qdrant:6333
+  collection: rag
+  vector_size: 384
+  timeout_seconds: 15
+  upsert_batch_size: 64
+
+rag:
+  require_context: true
+  hybrid_search: true
+  multi_query: true
+  query_variants: 3
+  vector_limit: 40
+  keyword_limit: 40
+  rerank_limit: 25
+  final_limit: 8
+  min_score: 0.05
+  semantic_weight: 0.55
+  keyword_weight: 0.20
+  rerank_weight: 0.25
+  mmr_lambda: 0.82
+  context_max_chars: 16000
+
+reranker:
+  enabled: false
+  provider: bge
+  base_url: http://bge-reranker:8080
+  model: BAAI/bge-reranker-large
+  timeout_seconds: 60
+  top_n: 25
+  normalize: true
+  fail_closed: false
+
+llm:
+  enabled: false
+  provider: ollama
+  base_url: http://ollama:11434
+  model: llama3.1:8b
+  timeout_seconds: 120
+  require_context: true
+  temperature: 0.1
+  max_context_chunks: 6
+  max_context_chars: 12000
+  max_answer_tokens: 900
+
+object_storage:
+  enabled: false
+  required: false
+  provider: oci-par
+  par_url: ""
+  prefix: rag-unified
+  public_base_url: ""
+  timeout_seconds: 120

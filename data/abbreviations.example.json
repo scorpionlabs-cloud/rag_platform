@@ -1,0 +1,12 @@
+{
+  "SMRT": "Singapore Mass Rapid Transit",
+  "UAT": "user acceptance testing",
+  "SIT": "system integration testing staging",
+  "OCI": "Oracle Cloud Infrastructure",
+  "ADB": "Autonomous Database",
+  "S&C": "Signal and Communication",
+  "UC1A": "Use Case 1a Maintenance Engineering Centre",
+  "UC1B": "Use Case 1b Rolling Stock work instructions",
+  "UC1C": "Use Case 1c Signal and Communication",
+  "WI": "work instruction"
+}

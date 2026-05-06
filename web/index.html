@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Cache-Control" content="no-store" />
+  <title>Unified Enterprise RAG</title>
+  <link rel="stylesheet" href="/style.css?v=2026050313" />
+</head>
+<body>
+  <aside class="sidebar">
+    <h2>RAG Console</h2>
+    <button onclick="showTab('workspace')">Workspace</button>
+    <button onclick="showTab('viewer')">Viewer / Editor</button>
+    <button onclick="showTab('searchTab')">Search / RAG</button>
+    <button onclick="showTab('jobs')">Jobs</button>
+    <button onclick="showTab('metrics')">Metrics</button>
+  </aside>
+  <main class="main">
+    <section id="workspace" class="tab">
+      <h1>Document Workspace</h1>
+      <div class="panel">
+        <h3>Upload</h3>
+        <input type="file" id="file" />
+        <label class="upload-option">
+          <input type="checkbox" id="fullImageIngestOnUpload" />
+          Render every PDF page to images and ingest those images during upload
+        </label>
+        <div class="hint">Use this when you want OCR/RAG to reflect the rendered image pages instead of the original PDF text layer. Large PDFs will take longer before the job is queued.</div>
+        <div class="upload-row">
+          <button id="uploadBtn" onclick="upload()">Upload</button>
+          <span id="uploadStatus" class="status">Idle</span>
+        </div>
+        <div class="progress-group">
+          <div class="progress-label">Upload</div>
+          <div class="progress-shell" aria-label="Upload progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="uploadProgress" class="progress-fill" style="width:0%"></div>
+          </div>
+          <div id="uploadTiming" class="timing-detail"></div>
+        </div>
+        <div class="progress-group">
+          <div class="progress-label">Ingestion</div>
+          <div class="progress-shell" aria-label="Ingestion progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+            <div id="ingestionProgress" class="progress-fill" style="width:0%"></div>
+          </div>
+          <div id="ingestionStatus" class="status">Idle</div>
+          <div id="ingestionTiming" class="timing-detail"></div>
+        </div>
+      </div>
+      <div class="panel workspace-next-steps">
+        <h3>Next Steps</h3>
+        <p>After upload, open the document in <strong>Viewer / Editor</strong> for page editing, or use <strong>Search / RAG</strong> to query ingested content.</p>
+        <div class="quick-actions">
+          <button id="openCurrentViewerBtn" onclick="openCurrentDocumentInViewer()" disabled>Open Viewer / Editor</button>
+          <button onclick="showTab('searchTab')">Open Search / RAG</button>
+          <button onclick="showTab('jobs')">Open Jobs</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="viewer" class="tab hidden">
+      <h1>Viewer / Editor</h1>
+      <div class="panel viewer-panel">
+        <div id="viewerStatus" class="status">No document loaded.</div>
+        <div class="viewer-toolbar">
+          <button id="prevPageBtn" onclick="prevPage()">Previous</button>
+          <span id="pageStatus" class="page-status">No document</span>
+          <button id="nextPageBtn" onclick="nextPage()">Next</button>
+          <button onclick="rotatePage(-90)">Rotate Left</button>
+          <button onclick="rotatePage(90)">Rotate Right</button>
+          <button onclick="zoomPage(-0.1)">Zoom Out</button>
+          <button onclick="zoomPage(0.1)">Zoom In</button>
+          <button onclick="resetView()">Reset View</button>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="canvas" width="900" height="620"></canvas>
+        </div>
+        <div class="toolbar text-editor">
+          <button class="tool-button" data-tool="select" onclick="setTool('select')">Select / Move</button>
+          <button class="tool-button" data-tool="text" onclick="setTool('text')">Text</button>
+          <button class="tool-button" data-tool="highlight" onclick="setTool('highlight')">Highlight</button>
+          <button class="tool-button" data-tool="whiteout" onclick="setTool('whiteout')">Delete Content</button>
+          <input id="editText" class="edit-text-input" placeholder="Type text, then click the page to place it" />
+          <label class="small-label">Size <input id="textSize" type="number" min="10" max="96" value="24" /></label>
+          <label class="small-label">Color <input id="textColor" type="color" value="#111827" /></label>
+          <button id="applyTextEditBtn" onclick="applySelectedTextEdit()" disabled>Apply to Selected Text</button>
+          <button id="deleteEditBtn" onclick="deleteSelectedObject()" disabled>Delete Selected Edit</button>
+          <button onclick="clearCanvas()">Clear Unsaved Edits</button>
+          <button id="saveEditBtn" onclick="saveEdit()">Save Edited Image</button>
+          <button id="reingestPageBtn" onclick="reingest('page')">Re-ingest Current Page Image</button>
+          <button id="reingestEditedBtn" onclick="reingest('edited')">Re-ingest Edited Pages</button>
+          <button id="reingestFullBtn" onclick="reingest('full')">Re-ingest Full Image Set</button>
+          <span id="selectedEditStatus" class="selected-edit-status">No edit selected</span>
+        </div>
+        <div class="editor-help">
+          Use <strong>Highlight</strong> to drag a yellow mark over content. Use <strong>Delete Content</strong> to white-out image content. Use <strong>Select / Move</strong> to click an edit overlay, move it, update text, or delete it before saving. Re-ingest can target only the current rendered page, all saved edited pages, or the full document as rendered page images.
+        </div>
+      </div>
+    </section>
+
+    <section id="searchTab" class="tab hidden">
+      <h1>Search / RAG</h1>
+      <div class="panel search-panel">
+        <h3>Ask the ingested documents</h3>
+        <div class="search-row">
+          <input id="query" placeholder="Ask a question..." />
+          <button onclick="search()">Search</button>
+        </div>
+        <div id="results"></div>
+      </div>
+    </section>
+
+    <section id="jobs" class="tab hidden">
+      <h1>Jobs</h1>
+      <div class="panel">
+        <button onclick="refreshJobs()">Refresh</button>
+        <div id="jobsList" class="jobs-wrap"></div>
+      </div>
+    </section>
+
+    <section id="metrics" class="tab hidden">
+      <h1>Metrics</h1>
+      <button onclick="loadMetrics()">Refresh</button>
+      <pre id="metricsOut"></pre>
+    </section>
+  </main>
+  <script src="/app.js?v=2026050313"></script>
+</body>
+</html>
